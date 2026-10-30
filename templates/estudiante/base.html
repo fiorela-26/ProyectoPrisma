@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Prisma{% endblock %}</title>
+  {% include "_fuentes.html" %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#1f5bff">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <header class="top glass">
+    <a class="marca" href="{{ url_for('estudiante.mochila') }}"><i></i>Prisma <small>· mochila</small></a>
+    {% if g.usuario %}
+    <span class="sp who">{{ g.usuario.nombre }}</span>
+    <a class="btn" href="{{ url_for('privacidad') }}">Privacidad</a>
+    <form action="{{ url_for('auth.salir') }}" method="post">
+      <button class="btn" type="submit">Cerrar sesión</button>
+    </form>
+    {% endif %}
+  </header>
+  <p id="aviso-offline" hidden role="status">Sin conexión. El tutor no funciona offline. Las interacciones se enviarán al volver internet.</p>
+  <main id="contenido" tabindex="-1">
+    <div class="wrap">
+      {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% if mensajes %}
+          {% for cat, msg in mensajes %}
+            <p class="aviso {{ 'err' if cat == 'error' else 'ok' }}" role="{{ 'alert' if cat == 'error' else 'status' }}">{{ msg }}</p>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block contenido %}{% endblock %}
+    </div>
+  </main>
+  <footer class="pie">
+    <p><a href="{{ url_for('privacidad') }}">Privacidad</a> · Ayuda: usa «Saltar al contenido», los ajustes DUA o el tutor de la sesión.</p>
+  </footer>
+  {% block scripts %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Cursos · Prisma{% endblock %}
+{% block contenido %}
+<section class="glass caja">
+  <h1>Tus cursos</h1>
+  <p class="mut">Crea un curso y sube materiales. Cada formato DUA se revisa antes de publicar.</p>
+  <form method="post" action="{{ url_for('panel.crear_curso') }}">
+    <h2>Crear curso</h2>
+    <div class="g2">
+      <p>
+        <label for="nombre">Nombre del curso</label>
+        <input id="nombre" name="nombre" type="text" required maxlength="200">
+      </p>
+      <p>
+        <label for="nivel_educativo">Nivel educativo (CINE / UNESCO)</label>
+        <select id="nivel_educativo" name="nivel_educativo" required>
+          <option value="" disabled selected>Elige el nivel</option>
+          {% for n in niveles_cine %}
+          <option value="{{ n.codigo }}">{{ n.etiqueta }}</option>
+          {% endfor %}
+        </select>
+      </p>
+    </div>
+    <p>
+      <label for="descripcion">Descripción (opcional)</label>
+      <textarea id="descripcion" name="descripcion" rows="3"></textarea>
+    </p>
+    <p><button class="btn p" type="submit">Crear</button></p>
+  </form>
+</section>
+{% if cursos %}
+<div class="tarjetas">
+  {% for c in cursos %}
+    <a class="tarj glass" href="{{ url_for('panel.curso', curso_id=c.id) }}">
+      <div class="ph"></div>
+      <h3>{{ c.nombre_curso }}</h3>
+      <p>{{ c.descripcion or "Sin descripción" }}</p>
+      {% if c.nivel_educativo_etiqueta %}<span class="chip">{{ c.nivel_educativo_etiqueta }}</span>{% endif %}
+      <span class="chip">{{ c.n_sesiones or 0 }} sesiones</span>
+      <span class="chip">{{ c.n_estudiantes or 0 }} estudiantes</span>
+    </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty glass caja">
+  <div class="o"></div>
+  <b>Aún no hay cursos</b>
+  Crea el primero con el formulario de arriba.
+</div>
+{% endif %}
+{% endblock %}

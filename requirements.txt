@@ -1,0 +1,16 @@
+Flask>=3.0,<4
+gunicorn>=22.0
+python-dotenv>=1.0
+supabase>=2.10,<3
+groq>=0.11
+google-genai>=1.0
+requests>=2.31
+pydantic>=2.7,<3
+PyMuPDF>=1.24
+pytesseract>=0.3.10
+python-docx>=1.1
+python-pptx>=1.0
+openpyxl>=3.1
+xlrd>=2.0
+pytest>=8.0
+# liblouis (Braille) se instala en el Dockerfile con apt (python3-louis); no hay wheel oficial para Windows.

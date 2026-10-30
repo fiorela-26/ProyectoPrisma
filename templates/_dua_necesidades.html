@@ -1,0 +1,32 @@
+<fieldset class="dua-checks">
+  <legend>{{ leyenda or "Necesidades DUA y adaptaciones de aprendizaje" }}</legend>
+  <p class="mut">Puedes marcar una o varias. Se combinan entre sí.</p>
+  {% for n in necesidades_dua %}
+  <p>
+    <label class="chk">
+      <input type="checkbox" name="{{ nombre_campo or 'preferencias' }}" value="{{ n.codigo }}"
+        {% if n.codigo in (seleccionadas or []) %}checked{% endif %}
+        data-dua="{{ n.codigo }}">
+      {{ n.etiqueta }}
+    </label>
+    <span class="mut">{{ n.ayuda }}</span>
+  </p>
+  {% endfor %}
+  <div>
+    <label for="{{ id_idioma }}">Lengua materna / idioma de la clase</label>
+    <input id="{{ id_idioma }}" name="idioma" type="text" list="{{ id_idioma }}-sugerencias"
+      data-dua-idioma maxlength="80" autocomplete="off"
+      value="{{ idioma_actual or 'Español' }}"
+      placeholder="Escribe o elige: quechua, aymara, guaraní, inglés…">
+    <datalist id="{{ id_idioma }}-sugerencias">
+      {% for l in lenguas_dua %}
+      <option value="{{ l.etiqueta }}"></option>
+      {% endfor %}
+    </datalist>
+    <span class="mut">Escribe el idioma (por ejemplo quechua) y pulsa Aplicar. Hasta entonces el texto extraído no cambia.</span>
+    <p class="acciones">
+      <button type="button" class="btn p" data-dua-aplicar>Aplicar idioma</button>
+    </p>
+    <p id="{{ id_idioma }}-estado" class="aviso" data-dua-idioma-estado hidden role="status"></p>
+  </div>
+</fieldset>

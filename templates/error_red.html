@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}No se pudo cargar · Prisma{% endblock %}
+{% block contenido %}
+<section class="glass caja" role="alert">
+  <h1>No se pudo cargar esta página</h1>
+  <p>Hubo un corte al consultar los datos. No se perdió el curso: recarga e inténtalo de nuevo.</p>
+  <p class="acciones">
+    <button class="btn p" type="button" onclick="location.reload()">Recargar</button>
+    <a class="btn" href="{{ url_for('raiz') }}">Ir al inicio</a>
+  </p>
+</section>
+{% endblock %}

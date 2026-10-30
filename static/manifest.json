@@ -1,0 +1,17 @@
+{
+  "name": "Prisma · mochila del estudiante",
+  "short_name": "Prisma",
+  "start_url": "/estudiante/cursos",
+  "display": "standalone",
+  "background_color": "#dce8ff",
+  "theme_color": "#1f5bff",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

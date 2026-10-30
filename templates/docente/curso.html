@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}{{ curso.nombre_curso }} · Prisma{% endblock %}
+{% block contenido %}
+<p><a class="btn" href="{{ url_for('panel.cursos') }}">← Todos los cursos</a></p>
+<section class="glass caja">
+  <div class="row">
+    <div>
+      <h1>{{ curso.nombre_curso }}</h1>
+      {% if curso.nivel_educativo_etiqueta %}<p class="mut">{{ curso.nivel_educativo_etiqueta }}</p>{% endif %}
+      {% if curso.descripcion %}<p class="mut">{{ curso.descripcion }}</p>{% endif %}
+    </div>
+    <a class="btn" href="{{ url_for('panel.analitica_curso', curso_id=curso.id) }}">Analítica del curso</a>
+  </div>
+</section>
+
+<div class="tabs glass" role="tablist">
+  <button type="button" role="tab" id="tab-material" aria-controls="panel-material" aria-selected="true">Material</button>
+  <button type="button" role="tab" id="tab-sesiones" aria-controls="panel-sesiones" aria-selected="false">Sesiones</button>
+  <button type="button" role="tab" id="tab-estudiantes" aria-controls="panel-estudiantes" aria-selected="false">Estudiantes</button>
+</div>
+
+<section class="glass caja" id="panel-material" role="tabpanel" aria-labelledby="tab-material">
+  <h2 id="subir">Subir material</h2>
+  {% if previa %}
+  <p class="aviso ok" role="status">Esto es lo esencial del tema, sin relleno. Revísalo y edítalo si hace falta antes de crear la sesión.</p>
+  <form method="post" action="{{ url_for('panel.confirmar_material', curso_id=curso.id) }}">
+    <input type="hidden" name="ruta" value="{{ previa.ruta }}">
+    <input type="hidden" name="hash" value="{{ previa.hash }}">
+    <input type="hidden" name="tipo" value="{{ previa.tipo }}">
+    <input type="hidden" name="idioma" value="{{ previa.idioma }}">
+    <p class="mut">{% if previa.tipo == 'tema' %}Sin archivo · {% else %}Archivo: {% endif %}{{ previa.nombre }}</p>
+    <p>
+      <label for="titulo">Título de la sesión</label>
+      <input id="titulo" name="titulo" type="text" maxlength="200" value="{{ previa.titulo }}">
+    </p>
+    <p>
+      <label for="texto">Resumen de la clase (puedes editarlo)</label>
+      <textarea id="texto" name="texto" rows="16" required>{{ previa.texto }}</textarea>
+    </p>
+    <p class="acciones">
+      <button class="btn p" type="submit">Crear sesión con este texto</button>
+      <a class="btn" href="{{ url_for('panel.curso', curso_id=curso.id) }}">Descartar y empezar de nuevo</a>
+    </p>
+  </form>
+  {% else %}
+  <p class="mut">Escribe el título de la sesión para que Prisma arme la clase, o sube un archivo para resumirlo. Revisa la vista previa, edítala si hace falta y recién entonces aprueba.</p>
+  <form id="form-previsualizar" method="post" action="{{ url_for('panel.subir', curso_id=curso.id) }}" enctype="multipart/form-data" onsubmit="return false;">
+    <p>
+      <label for="titulo">Título de la sesión</label>
+      <input id="titulo" name="titulo" type="text" maxlength="200" placeholder="Obligatorio si no subes archivo. Si hay archivo, puedes dejarlo en blanco">
+    </p>
+    <p>
+      <label for="archivo">Archivo (opcional: PDF, Word, PowerPoint, Excel, texto, imagen, audio o video)</label>
+      <input id="archivo" name="archivo" type="file" accept="{{ accept_archivos }}">
+    </p>
+    <p>
+      <label for="idioma">Idioma original</label>
+      <input id="idioma" name="idioma" type="text" value="es" maxlength="8">
+    </p>
+    <p><button id="btn-previsualizar" class="btn p" type="button">Generar vista previa</button></p>
+  </form>
+
+  <div id="preview-container" hidden class="glass caja" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      var btn = document.getElementById("btn-previsualizar");
+      var preview = document.getElementById("preview-container");
+      var base = location.pathname.replace(/\/$/, "");
+      var urlPreview = base + "/materiales/preview_json";
+      var urlConfirmar = base + "/materiales/confirmar";
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+      function mostrarError(msg) {
+        preview.hidden = false;
+        preview.innerHTML = '<p class="aviso err" role="alert">' + esc(msg || "Error en la extracción") + "</p>";
+      }
+      btn.addEventListener("click", function () {
+        var fileInput = document.getElementById("archivo");
+        var titulo = (document.getElementById("titulo").value || "").trim();
+        var archivo = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+        if (!archivo && !titulo) {
+          mostrarError("Escribe un título o sube un archivo.");
+          return;
+        }
+        var fd = new FormData();
+        if (archivo) fd.append("archivo", archivo);
+        fd.append("titulo", titulo);
+        fd.append("idioma", document.getElementById("idioma").value || "es");
+        preview.hidden = false;
+        preview.innerHTML = archivo
+          ? '<p class="aviso">Leyendo el archivo y preparando un resumen del tema… puede tardar un poco.</p>'
+          : '<p class="aviso">Creando la clase a partir del título… puede tardar un poco.</p>';
+        fetch(urlPreview, { method: "POST", body: fd, credentials: "same-origin" })
+          .then(function (r) {
+            var tipo = (r.headers.get("content-type") || "").toLowerCase();
+            if (tipo.indexOf("application/json") >= 0) {
+              return r.json().then(function (j) { return { ok: r.ok, json: j }; });
+            }
+            return r.text().then(function (t) {
+              var msg = "El servidor no pudo completar la extracción.";
+              if (r.status === 413) msg = "El archivo supera el tamaño máximo permitido.";
+              if (r.status === 401 || r.status === 302) msg = "La sesión caducó. Vuelve a entrar.";
+              var m = (t || "").match(/<title>([^<]+)<\/title>/i);
+              if (m && m[1] && m[1].indexOf("Error") >= 0) msg = m[1].replace(/\s+/g, " ").trim();
+              var py = (t || "").match(/([A-Za-z_]+Error:[^<\n]+)/);
+              if (py) msg = py[1].trim();
+              return { ok: false, json: { error: msg } };
+            });
+          })
+          .then(function (r) {
+            if (!r.ok) {
+              mostrarError(r.json && r.json.error ? r.json.error : "Error en la extracción");
+              return;
+            }
+            var d = r.json || {};
+            preview.innerHTML =
+              '<form method="post" action="' + esc(urlConfirmar) + '">' +
+              '<input type="hidden" name="ruta" value="' + esc(d.ruta) + '">' +
+              '<input type="hidden" name="hash" value="' + esc(d.hash) + '">' +
+              '<input type="hidden" name="tipo" value="' + esc(d.tipo) + '">' +
+              '<input type="hidden" name="idioma" value="' + esc(d.idioma) + '">' +
+              '<p class="mut">' + (d.tipo === "tema" ? "Sin archivo · " : "Archivo: ") + esc(d.nombre) + "</p>" +
+              '<p><label for="titulo-prev">Título de la sesión</label>' +
+              '<input id="titulo-prev" name="titulo" type="text" maxlength="200" value="' + esc(d.titulo) + '"></p>' +
+              '<p><label for="texto-prev">Resumen de la clase (puedes editarlo)</label>' +
+              '<textarea id="texto-prev" name="texto" rows="16" required>' + esc(d.texto) + "</textarea></p>" +
+              '<p class="acciones"><button class="btn p" type="submit">Aprobar y crear sesión</button>' +
+              '<button type="button" class="btn" id="btn-cancel-preview">Descartar y empezar de nuevo</button></p>' +
+              "</form>";
+            document.getElementById("btn-cancel-preview").addEventListener("click", function () {
+              preview.hidden = true;
+              preview.innerHTML = "";
+            });
+          })
+          .catch(function (e) {
+            mostrarError(String(e));
+          });
+      });
+    })();
+  </script>
+  {% endif %}
+</section>
+
+<section class="glass caja" id="panel-sesiones" role="tabpanel" aria-labelledby="tab-sesiones">
+  <h2 id="sesiones">Sesiones</h2>
+  {% if sesiones %}
+  <div class="tarjetas">
+    {% for s in sesiones %}
+      <a class="tarj glass" href="{{ url_for('panel.sesion', sesion_id=s.id) }}">
+        <div class="ph"></div>
+        <h3>{{ s.titulo }}</h3>
+        {% set chip_estado = 'ok' if s.estado == 'publicado' else ('w' if s.estado in ['revision', 'procesando'] else '') %}
+        <p><span class="chip {{ chip_estado }}">{{ s.estado }}</span></p>
+        {% for j in s.jobs[:1] %}
+          <p class="mut" data-job-label="{{ j.id }}">{{ j.tipo }} · {{ j.estado }} · {{ j.progreso or 0 }}%</p>
+          <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ j.progreso or 0 }}" aria-label="Progreso del job {{ j.tipo }}" data-job-id="{{ j.id }}">
+            <i style="width: {{ j.progreso or 0 }}%"></i>
+          </div>
+        {% endfor %}
+      </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="o"></div>
+    <b>No hay sesiones todavía</b>
+    Sube un material en la pestaña Material.
+  </div>
+  {% endif %}
+</section>
+
+<section id="panel-estudiantes" role="tabpanel" aria-labelledby="tab-estudiantes">
+  <h2 id="alumnos">Estudiantes</h2>
+  <div class="split">
+    <div>
+      {% if inscripciones %}
+        {% for i in inscripciones %}
+          <form method="post" action="{{ url_for('panel.preferencias', curso_id=curso.id, inscripcion_id=i.id) }}" class="glass caja">
+            <h3>{{ i.nombre }}</h3>
+            {% with nombre_campo='preferencias', seleccionadas=i.preferencias or [], id_idioma='idioma-' ~ i.id, idioma_actual=i.idioma_preferido or 'es', leyenda='Necesidades DUA y adaptaciones de aprendizaje' %}
+            {% include "_dua_necesidades.html" %}
+            {% endwith %}
+            <p><button class="btn p" type="submit">Actualizar necesidades DUA</button></p>
+          </form>
+        {% endfor %}
+      {% else %}
+        <div class="empty glass caja">
+          <div class="o"></div>
+          <b>Aún no hay estudiantes</b>
+          Inscríbelos con el formulario de la derecha.
+        </div>
+      {% endif %}
+    </div>
+    <aside class="sticky glass caja">
+      <h2>Inscribir</h2>
+      <form method="post" action="{{ url_for('panel.inscribir', curso_id=curso.id) }}">
+        <p>
+          <label for="email">Correo del estudiante</label>
+          <input id="email" name="email" type="email" autocomplete="email" required>
+        </p>
+        <p>
+          <label for="nombre_est">Nombre (si es cuenta nueva)</label>
+          <input id="nombre_est" name="nombre" type="text">
+        </p>
+        {% with nombre_campo='preferencias', seleccionadas=[], id_idioma='idioma-nuevo', idioma_actual='es', leyenda='Necesidades DUA y adaptaciones de aprendizaje (opcional)' %}
+        {% include "_dua_necesidades.html" %}
+        {% endwith %}
+        <p><button class="btn p" type="submit">Inscribir</button></p>
+      </form>
+    </aside>
+  </div>
+</section>
+{% endblock %}

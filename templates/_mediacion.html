@@ -1,0 +1,26 @@
+<section class="med-bloque" id="mediacion-tema" data-med-url="{{ url_mediacion }}" data-med-rol="{{ rol_mediacion }}">
+  <article class="med-pauta glass caja" aria-labelledby="med-pauta-t">
+    <div class="med-cab">
+      <span class="med-ico" aria-hidden="true">
+        {% if rol_mediacion == 'docente' %}
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 4 12.5V16H8v-1.5A7 7 0 0 1 12 2z"/></svg>
+        {% else %}
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z"/></svg>
+        {% endif %}
+      </span>
+      <h3 id="med-pauta-t">{% if rol_mediacion == 'docente' %}Pauta de mediación para el docente{% else %}Pauta de apoyo para estudiar{% endif %}</h3>
+    </div>
+    <p class="mut" id="med-pauta-estado" role="status">Preparando la pauta de esta clase…</p>
+    <p id="med-pauta-texto" hidden></p>
+  </article>
+  <article class="med-glosario glass caja" aria-labelledby="med-glos-t">
+    <div class="med-cab">
+      <span class="med-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19a2 2 0 0 0 2 2h12M6 21V5a2 2 0 0 1 2-2h10v16"/><path d="M8 7h8M8 11h8"/></svg>
+      </span>
+      <h3 id="med-glos-t">Glosario de apoyo</h3>
+    </div>
+    <p class="mut" id="med-glos-estado" role="status">Preparando el glosario…</p>
+    <ul class="med-lista" id="med-glos-lista" hidden></ul>
+  </article>
+</section>

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Analítica · {{ curso.nombre_curso }}{% endblock %}
+{% block contenido %}
+<p><a class="btn" href="{{ url_for('panel.curso', curso_id=curso.id) }}">← Volver al curso</a></p>
+<section class="glass caja">
+  <h1>Analítica · {{ curso.nombre_curso }}</h1>
+  <p class="mut">{{ resumen.total_interacciones }} interacciones registradas. No se muestran nombres de estudiantes.</p>
+</section>
+
+<div class="g2">
+  <section class="glass caja">
+    <h2>Formatos más usados</h2>
+    {% if resumen.formatos %}
+      <ul class="lista">
+        {% for f in resumen.formatos %}
+          <li>
+            <p>{{ f.nombre }} · {{ f.usos }} usos · {{ f.segundos }} s</p>
+            <div class="bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ f.pct }}" aria-label="{{ f.nombre }}">
+              <i style="width: {{ f.pct }}%"></i>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="empty">
+        <div class="o"></div>
+        <b>Aún no hay interacciones</b>
+        Cuando los estudiantes usen las sesiones, verás el resumen aquí.
+      </div>
+    {% endif %}
+  </section>
+
+  <div>
+    <h2>Sesiones</h2>
+    {% for s in resumen.sesiones %}
+      <article class="glass caja">
+        <h3>{{ s.titulo }} <small class="mut">({{ s.estado }})</small></h3>
+        <p>Marcas de completado: {{ s.completadas }}</p>
+        <h4>Preguntas frecuentes del chat</h4>
+        {% if s.preguntas %}
+          <ol>
+            {% for p in s.preguntas %}
+              <li>{{ p.pregunta }} ({{ p.veces }})</li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          <p class="mut">Sin preguntas agrupadas todavía.</p>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

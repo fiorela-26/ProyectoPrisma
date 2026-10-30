@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ sesion.titulo }} · Prisma{% endblock %}
+{% block contenido %}
+<p><a class="btn" href="{{ url_for('panel.curso', curso_id=sesion.curso_id) }}">← Volver al curso</a></p>
+<section class="glass caja">
+  <div class="row">
+    <div>
+      <h1>{{ sesion.titulo }}</h1>
+      <p>
+        {% set chip_estado = 'ok' if sesion.estado == 'publicado' else ('w' if sesion.estado in ['revision', 'procesando'] else '') %}
+        <span class="chip {{ chip_estado }}">{{ sesion.estado }}</span>
+        <span class="mut"> · {% if sesion.tipo_archivo == 'tema' %}Generada desde el título{% else %}Tipo: {{ sesion.tipo_archivo }}{% endif %}</span>
+      </p>
+      {% if sesion.estado == 'publicado' %}
+        <p class="aviso ok" role="status">Publicado. Cada estudiante ve la clase con las necesidades DUA que le asignaste; puede ajustarlas durante el estudio.</p>
+      {% endif %}
+    </div>
+    {% if sesion.estado == 'revision' %}
+      <form method="post" action="{{ url_for('panel.publicar', sesion_id=sesion.id) }}">
+        <button class="btn p" type="submit">Publicar para estudiantes inscritos</button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+
+<div class="tabs glass" role="tablist">
+  <button type="button" role="tab" id="tab-texto" aria-controls="panel-texto" aria-selected="true">Texto</button>
+  <button type="button" role="tab" id="tab-formatos" aria-controls="panel-formatos" aria-selected="false">Formatos DUA</button>
+  <button type="button" role="tab" id="tab-procesos" aria-controls="panel-procesos" aria-selected="false">Procesos y dudas</button>
+</div>
+
+<section class="glass caja" id="panel-texto" role="tabpanel" aria-labelledby="tab-texto">
+  <h2 id="texto">Texto extraído</h2>
+  <pre class="texto">{{ sesion.texto_extraido or 'Aún no hay texto. Espera a que termine la extracción.' }}</pre>
+</section>
+
+<section id="panel-formatos" role="tabpanel" aria-labelledby="tab-formatos">
+  <div class="glass caja">
+    <h2 id="formatos">Formatos DUA</h2>
+    <p class="mut">Simulador para el docente: combina adaptaciones y mira el resultado al instante. No guarda cambios en el material original.</p>
+    {% include "_imagen_educativa.html" %}
+    {% include "_mediacion.html" %}
+    {% if sesion.texto_extraido %}
+    <div class="dua-sim-grid">
+      <form id="form-dua-sim" onsubmit="return false;">
+        {% with nombre_campo='dua_sim', seleccionadas=[], id_idioma='dua-sim-idioma', idioma_actual='es', leyenda='Necesidades educativas DUA (simulador)' %}
+        {% include "_dua_necesidades.html" %}
+        {% endwith %}
+      </form>
+      <div id="dua-preview" class="dua-preview" aria-live="polite" aria-label="Vista previa combinada DUA"></div>
+    </div>
+    {% else %}
+    <p class="aviso">Cuando haya texto de la clase, aquí podrás simular las adaptaciones DUA.</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="glass caja" id="panel-procesos" role="tabpanel" aria-labelledby="tab-procesos">
+  <h2 id="jobs">Procesos en segundo plano</h2>
+  {% if jobs %}
+    <ul class="lista">
+      {% for j in jobs %}
+        <li>
+          <p data-job-label="{{ j.id }}">{{ j.tipo }}{% if j.formato %} / {{ j.formato }}{% endif %} · {{ j.estado }} · {{ j.progreso or 0 }}%</p>
+          <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ j.progreso or 0 }}" aria-label="{{ j.tipo }} {{ j.formato or '' }}" data-job-id="{{ j.id }}">
+            <i style="width: {{ j.progreso or 0 }}%"></i>
+          </div>
+          {% if j.error %}<p class="aviso err">{{ j.error }}</p>{% endif %}
+          {% if j.estado == 'failed' %}
+            <form method="post" action="{{ url_for('panel.reintentar', job_id=j.id) }}">
+              <button class="btn p" type="submit">Reintentar</button>
+            </form>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty">
+      <div class="o"></div>
+      <b>No hay jobs todavía</b>
+      Aquí verás la extracción u otros procesos en segundo plano.
+    </div>
+  {% endif %}
+
+  <h2 id="dudas">Dudas enviadas por estudiantes</h2>
+  {% if dudas %}
+    <ul class="lista">
+      {% for d in dudas %}
+        <li>{{ d.texto }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="mut">Nadie ha enviado dudas todavía. No se muestran nombres si no hace falta.</p>
+  {% endif %}
+</section>
+<script type="application/json" id="dua-texto">{{ (sesion.texto_extraido or '') | tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/imagen_edu.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/mediacion.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/dua.js') }}" defer></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var nodo = document.getElementById("dua-texto");
+    var texto = "";
+    try { texto = nodo ? JSON.parse(nodo.textContent || '""') : ""; } catch (e) { texto = ""; }
+    if (window.PrismaDUA && document.getElementById("form-dua-sim")) {
+      window.PrismaDUA.init({
+        root: "#form-dua-sim",
+        preview: "#dua-preview",
+        texto: texto,
+        traducirUrl: {{ url_for('panel.dua_traducir', sesion_id=sesion.id) | tojson }}
+      });
+    }
+  });
+</script>
+{% endblock %}

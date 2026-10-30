@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Prisma{% endblock %}</title>
+  {% include "_fuentes.html" %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <meta name="theme-color" content="#1f5bff">
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <header class="top glass">
+    <a class="marca" href="{{ url_for('panel.cursos') }}"><i></i>Prisma <small>· panel docente</small></a>
+    {% if g.usuario %}
+    <span class="sp who">{{ g.usuario.nombre }}</span>
+    <a class="btn" href="{{ url_for('privacidad') }}">Privacidad</a>
+    <form action="{{ url_for('auth.salir') }}" method="post">
+      <button class="btn" type="submit">Cerrar sesión</button>
+    </form>
+    {% endif %}
+  </header>
+  <main id="contenido" tabindex="-1">
+    <div class="wrap">
+      {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% if mensajes %}
+          {% for cat, msg in mensajes %}
+            <p class="aviso {{ 'err' if cat == 'error' else 'ok' }}" role="{{ 'alert' if cat == 'error' else 'status' }}">{{ msg }}</p>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block contenido %}{% endblock %}
+    </div>
+  </main>
+  <footer class="pie">
+    <p><a href="{{ url_for('privacidad') }}">Privacidad</a> · Ayuda: usa «Saltar al contenido» o el menú de la página.</p>
+  </footer>
+  <script src="{{ url_for('static', filename='js/jobs.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

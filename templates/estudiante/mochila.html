@@ -1,0 +1,35 @@
+{% extends "estudiante/base.html" %}
+{% block title %}Mi mochila · Prisma{% endblock %}
+{% block contenido %}
+<section class="glass caja">
+  <h1>Mi mochila</h1>
+  <p class="mut">Materias en las que estás inscrito. Solo ves lo que el docente ya publicó.</p>
+</section>
+{% if not cursos %}
+<div class="empty glass caja">
+  <div class="o"></div>
+  <b>Aún no tienes cursos</b>
+  Pide a tu docente que te inscriba.
+</div>
+{% endif %}
+{% for c in cursos %}
+  <article class="glass caja">
+    <h2>{{ c.nombre_curso }}</h2>
+    {% if c.nivel_educativo_etiqueta %}<p class="mut">{{ c.nivel_educativo_etiqueta }}</p>{% endif %}
+    {% if c.descripcion %}<p class="mut">{{ c.descripcion }}</p>{% endif %}
+    <h3>Sesiones publicadas</h3>
+    {% if c.sesiones %}
+      <div class="tarjetas">
+        {% for s in c.sesiones %}
+          <a class="tarj glass" href="{{ url_for('estudiante.sesion', sesion_id=s.id) }}">
+            <div class="ph"></div>
+            <h3>{{ s.titulo }}</h3>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="mut">Todavía no hay sesiones publicadas.</p>
+    {% endif %}
+  </article>
+{% endfor %}
+{% endblock %}

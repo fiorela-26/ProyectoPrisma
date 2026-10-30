@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacidad · Prisma</title>
+  {% include "_fuentes.html" %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <meta name="theme-color" content="#1f5bff">
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <main id="contenido" class="hero-ancho glass caja" tabindex="-1">
+    <h1>Privacidad y datos personales</h1>
+    <p>Prisma trata datos para ofrecer materiales educativos accesibles. Se rige por la Ley 29733 (Perú) y su reglamento: finalidad determinada, consentimiento informado y seguridad razonable.</p>
+
+    <h2>Qué datos hay</h2>
+    <ul>
+      <li>Cuenta: correo, nombre y rol (docente o estudiante).</li>
+      <li>Preferencias de formato (lectura, contraste, enfoque). Son necesidades educativas: se tratan como datos sensibles y no se usan para perfilar fuera de la clase.</li>
+      <li>Materiales, paquetes DUA, chat del tutor e interacciones de progreso (formato usado, tiempo, completado). La analítica del docente no muestra nombres si no hace falta.</li>
+    </ul>
+
+    <h2>Menores de edad</h2>
+    <p>Si el estudiante es menor, hace falta el consentimiento informado de la madre, el padre o la persona tutora antes de crear la cuenta y de registrar preferencias o chat.</p>
+
+    <h2>Retención y borrado</h2>
+    <ul>
+      <li>El chat del tutor se guarda como máximo {{ retencion }} días con el fin de dudas y mejora del material. El estudiante puede borrar su conversación de una sesión cuando quiera.</li>
+      <li>El docente puede pedir la baja de un curso y de las inscripciones asociadas.</li>
+      <li>Las claves de servicio y de modelos nunca se envían al navegador.</li>
+    </ul>
+
+    <h2>IA</h2>
+    <p>El tutor y algunos formatos se generan con IA, solo a partir del material de la sesión. El contenido entre datos no se interpreta como instrucciones. Todo texto de IA lleva marca visible y el docente puede editarlo antes de publicar.</p>
+
+    <p><a class="btn" href="{{ url_for('auth.entrar') }}">Volver a entrar</a></p>
+  </main>
+</body>
+</html>
