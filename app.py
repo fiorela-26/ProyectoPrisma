@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, redirect, url_for
 
 import httpx
+import webbrowser
 
 from config import settings
 from routes.auth import bp as auth_bp
@@ -100,9 +101,11 @@ def create_app(con_worker: bool | None = None):
 
 app = create_app(con_worker=False)
 
-if __name__ == "__main__":
-    from services import jobs
 
-    jobs.iniciar_worker()
-    # use_reloader=False evita dos procesos y dos workers en desarrollo.
-    app.run(host="127.0.0.1", port=5000, debug=True, use_reloader=False)
+
+if __name__ == '__main__':
+    # Cambia la ruta según dónde tengas instalado Chrome si fuera necesario
+    chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe %s"
+    webbrowser.get(chrome_path).open("http://127.0.0.1:5000/entrar")
+
+    app.run(debug=True)
